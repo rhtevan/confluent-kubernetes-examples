@@ -11,6 +11,9 @@ spec:
     init: confluentinc/confluent-init-container:2.4.0
   dataVolumeCapacity: 10Gi
   logVolumeCapacity: 10Gi
+  # Allow defaultSCC
+  podTemplate:
+    podSecurityContext: {}
 ---
 apiVersion: platform.confluent.io/v1beta1
 kind: Kafka
@@ -25,12 +28,16 @@ spec:
   dataVolumeCapacity: 10Gi
   metricReporter:
     enabled: true
+  podTemplate:
+    podSecurityContext: {}
   listeners:
       external:
         externalAccess:
           type: loadBalancer
           loadBalancer:
-            domain: ## Domain 
+            # A dummy value, the real value will be provided by OCP and
+            # the Cloud Provider
+            domain: example.com # a dummy value
 ---
 apiVersion: platform.confluent.io/v1beta1
 kind: Connect
@@ -42,13 +49,15 @@ spec:
   image:
     application: confluentinc/cp-server-connect:7.2.0
     init: confluentinc/confluent-init-container:2.4.0
+  podTemplate:
+    podSecurityContext: {}
   dependencies:
     kafka:
       bootstrapEndpoint: kafka:9071
   externalAccess:
     type: loadBalancer
     loadBalancer:
-      domain: ## Domain    
+      domain: example.com # a dummy value
 ---
 apiVersion: platform.confluent.io/v1beta1
 kind: KsqlDB
@@ -60,11 +69,13 @@ spec:
   image:
     application: confluentinc/cp-ksqldb-server:7.2.0
     init: confluentinc/confluent-init-container:2.4.0
+  podTemplate:
+    podSecurityContext: {}
   dataVolumeCapacity: 10Gi
   externalAccess:
     type: loadBalancer
     loadBalancer:
-      domain: ## Domain    
+      domain: example.com # a dummy value
 ---
 apiVersion: platform.confluent.io/v1beta1
 kind: ControlCenter
@@ -86,10 +97,17 @@ spec:
     connect:
     - name: connect
       url: http://connect.confluent.svc.cluster.local:8083
+  podTemplate:
+    podSecurityContext: {}
+    probe:
+      liveness:
+        periodSeconds: 10
+        failureThreshold: 5
+        timeoutSeconds: 500
   externalAccess:
     type: loadBalancer
     loadBalancer:
-      domain: ## Domain    
+      domain: example.com # a dummy value
 ---
 apiVersion: platform.confluent.io/v1beta1
 kind: SchemaRegistry
@@ -101,10 +119,12 @@ spec:
   image:
     application: confluentinc/cp-schema-registry:7.2.0
     init: confluentinc/confluent-init-container:2.4.0
+  podTemplate:
+    podSecurityContext: {}
   externalAccess:
     type: loadBalancer
     loadBalancer:
-      domain: ## Domain    
+      domain: example.com # a dummy value
 ---
 apiVersion: platform.confluent.io/v1beta1
 kind: KafkaRestProxy
@@ -119,7 +139,9 @@ spec:
   dependencies:
     schemaRegistry:
       url: http://schemaregistry.confluent.svc.cluster.local:8081
+  podTemplate:
+    podSecurityContext: {}
   externalAccess:
     type: loadBalancer
     loadBalancer:
-      domain: ## Domain
+      domain: example.com # a dummy value
